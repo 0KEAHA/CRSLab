@@ -1,6 +1,7 @@
 # dataset
-dataset: TGReDial
+dataset: Huatuo
 tokenize: pkuseg
+not_download: true
 # dataloader
 context_truncate: 1024
 response_truncate: 1024
@@ -24,8 +25,8 @@ n_positions: 1024
 user_proj_dim: 512
 # optim
 rec:
-  epoch: 1
-  batch_size: 64
+  epoch: 3
+  batch_size: 3
   early_stop: True
   stop_mode: max
   patience: 3
@@ -33,8 +34,8 @@ rec:
     name: Adam
     lr: !!float 3e-3
 conv:
-  epoch: 1
-  batch_size: 16
+  epoch: 3
+  batch_size: 10
   early_stop: True
   stop_mode: min
   optimizer:
@@ -44,3 +45,4 @@ conv:
     name: ReduceLROnPlateau
     patience: 3
     factor: 0.5
+

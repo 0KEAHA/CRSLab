@@ -14,6 +14,7 @@ from loguru import logger
 from math import ceil
 from tqdm import tqdm
 
+DEBUG = True
 
 class BaseDataLoader(ABC):
     """Abstract class of dataloader
@@ -50,6 +51,8 @@ class BaseDataLoader(ABC):
         """
         dataset = self.dataset
         if process_fn is not None:
+            if DEBUG:
+                print('[Start dataset process before batchify]')
             dataset = process_fn()
             logger.info('[Finish dataset process before batchify]')
         dataset = dataset[:ceil(len(dataset) * self.scale)]
@@ -65,9 +68,10 @@ class BaseDataLoader(ABC):
             batch = [dataset[idx] for idx in batch_idx]
             batch = batch_fn(batch)
             if batch == False:
+                logger.warning('Batch is empty, skip this batch')
                 continue
             else:
-                yield(batch) 
+                yield(batch)
 
     def get_conv_data(self, batch_size, shuffle=True):
         """get_data wrapper for conversation.

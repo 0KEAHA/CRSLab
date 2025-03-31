@@ -30,6 +30,7 @@ from crslab.config import DATASET_PATH
 from crslab.data.dataset.base import BaseDataset
 from .resources import resources
 
+DEBUG = True
 
 class TGReDialDataset(BaseDataset):
     """

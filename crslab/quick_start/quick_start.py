@@ -11,6 +11,9 @@
 from crslab.config import Config
 from crslab.data import get_dataset, get_dataloader
 from crslab.system import get_system
+import sys
+
+DEBUG = True
 
 
 def run_crslab(config, save_data=False, restore_data=False, save_system=False, restore_system=False,

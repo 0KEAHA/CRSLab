@@ -103,6 +103,8 @@ class KBRDModel(BaseModel):
         self.n_positions = opt.get('n_positions', 1024)
         self.longest_label = opt.get('longest_label', 1)
         self.user_proj_dim = opt.get('user_proj_dim', 512)
+        # switching network
+        
 
         super(KBRDModel, self).__init__(opt, device)
 
@@ -207,7 +209,6 @@ class KBRDModel(BaseModel):
         return sum_logits, preds
 
     def decode_greedy(self, encoder_states, user_embedding):
-
         bsz = encoder_states[0].shape[0]
         xs = self._starts(bsz)
         incr_state = None

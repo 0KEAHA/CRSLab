@@ -22,6 +22,7 @@ import json
 import os
 from collections import defaultdict
 from copy import copy
+import sys
 
 from loguru import logger
 from tqdm import tqdm
@@ -29,6 +30,8 @@ from tqdm import tqdm
 from crslab.config import DATASET_PATH
 from crslab.data.dataset.base import BaseDataset
 from .resources import resources
+
+DEBUG = False
 
 
 class ReDialDataset(BaseDataset):
@@ -159,6 +162,12 @@ class ReDialDataset(BaseDataset):
             movie_ids = [self.entity2id[movie] for movie in utt['movies'] if movie in self.entity2id]
             entity_ids = [self.entity2id[entity] for entity in utt['entity'] if entity in self.entity2id]
             word_ids = [self.word2id[word] for word in utt['word'] if word in self.word2id]
+            if(DEBUG and len(entity_ids) != 0):
+                print(f"[Load text: {utt['text']}, text_token_ids: {text_token_ids}]")
+                print(f"[Load movies: {utt['movies']}, movie_ids: {movie_ids}]")
+                print(f"[Load entities: {utt['entity']}, entity_ids: {entity_ids}]")
+                if(input("Continue?") == 'n'):
+                    sys.exit(0)
 
             if utt["role"] == last_role:
                 augmented_convs[-1]["text"] += text_token_ids

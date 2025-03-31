@@ -5,3 +5,4 @@ from .inspired import InspiredDataset
 from .opendialkg import OpenDialKGDataset
 from .redial import ReDialDataset
 from .tgredial import TGReDialDataset
+from .huatuo import HuatuoDataset

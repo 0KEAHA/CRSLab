@@ -9,10 +9,18 @@
 
 import argparse
 import warnings
+import os
+import sys
+from loguru import logger
+
+DEBUG = True
 
 from crslab.config import Config
 
 warnings.filterwarnings('ignore')
+
+os.environ["LOGURU_LEVEL"] = "DEBUG"
+logger.add(sys.stderr, level="DEBUG" if DEBUG else "INFO", format="{time} {level} {message}")
 
 if __name__ == '__main__':
     # parse args

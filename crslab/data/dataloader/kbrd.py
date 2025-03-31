@@ -13,6 +13,7 @@ from tqdm import tqdm
 from crslab.data.dataloader.base import BaseDataLoader
 from crslab.data.dataloader.utils import add_start_end_token_idx, padded_tensor, truncate, merge_utt
 
+DEBUG = True
 
 class KBRDDataLoader(BaseDataLoader):
     """Dataloader for model KBRD.
@@ -54,12 +55,17 @@ class KBRDDataLoader(BaseDataLoader):
         self.entity_truncate = opt.get('entity_truncate', None)
 
     def rec_process_fn(self):
+        #最终返回的是一个列表，列表中的每个元素是一个字典，字典是每一轮推荐者推荐的实体和电影
         augment_dataset = []
         for conv_dict in tqdm(self.dataset):
             if conv_dict['role'] == 'Recommender':
                 for movie in conv_dict['items']:
                     augment_conv_dict = {'context_entities': conv_dict['context_entities'], 'item': movie}
                     augment_dataset.append(augment_conv_dict)
+        if DEBUG:
+            with open('rec_process_fn.txt', 'w') as f:
+                f.write(str(augment_dataset))
+                print('rec_process_fn.txt has been written')
         return augment_dataset
 
     def rec_batchify(self, batch):
@@ -68,7 +74,13 @@ class KBRDDataLoader(BaseDataLoader):
         for conv_dict in batch:
             batch_context_entities.append(conv_dict['context_entities'])
             batch_movies.append(conv_dict['item'])
-
+        if DEBUG:
+            with open('rec_batchify.txt', 'w') as f:
+                f.write(str({
+            "context_entities": batch_context_entities,
+            "item": torch.tensor(batch_movies, dtype=torch.long)
+        }))
+                print('rec_batchify.txt has been written')
         return {
             "context_entities": batch_context_entities,
             "item": torch.tensor(batch_movies, dtype=torch.long)
@@ -89,7 +101,14 @@ class KBRDDataLoader(BaseDataLoader):
                 add_start_end_token_idx(truncate(conv_dict['response'], self.response_truncate - 2),
                                         start_token_idx=self.start_token_idx,
                                         end_token_idx=self.end_token_idx))
-
+        if DEBUG:
+            with open('conv_batchify.txt', 'w') as f:
+                f.write(str({
+            "context_tokens": padded_tensor(batch_context_tokens, self.pad_token_idx, pad_tail=False),
+            "context_entities": batch_context_entities,
+            "response": padded_tensor(batch_response, self.pad_token_idx)
+        }))
+                print('conv_batchify.txt has been written')
         return {
             "context_tokens": padded_tensor(batch_context_tokens, self.pad_token_idx, pad_tail=False),
             "context_entities": batch_context_entities,

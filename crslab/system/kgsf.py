@@ -11,6 +11,7 @@ import os
 
 import torch
 from loguru import logger
+from torch import nn
 
 from crslab.evaluator.metrics.base import AverageMetric
 from crslab.evaluator.metrics.gen import PPLMetric
@@ -152,10 +153,19 @@ class KGSFSystem(BaseSystem):
             self.evaluator.report(mode='test')
 
     def train_conversation(self):
-        if os.environ["CUDA_VISIBLE_DEVICES"] == '-1':
-            self.model.freeze_parameters()
+        # if os.environ["CUDA_VISIBLE_DEVICES"] == '-1':
+        #     self.model.freeze_parameters()
+        # else:
+        #     self.model.module.freeze_parameters()
+        # self.init_optim(self.conv_optim_opt, self.model.parameters())
+        if isinstance(self.model, nn.DataParallel):
+            model_to_freeze = self.model.module
         else:
-            self.model.module.freeze_parameters()
+            model_to_freeze = self.model
+        
+        # 调用统一接口
+        model_to_freeze.freeze_parameters()
+        
         self.init_optim(self.conv_optim_opt, self.model.parameters())
 
         for epoch in range(self.conv_epoch):

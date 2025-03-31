@@ -40,16 +40,17 @@ class BaseDataset(ABC):
         self.dpath = dpath
 
         # download
-        dfile = resource['file']
-        build(dpath, dfile, version=resource['version'])
+        not_download = opt.get('not_download', False)
+        print(f'DataSet: it is not_download: {not_download}')
+        if not not_download:
+            dfile = resource['file']
+            build(dpath, dfile, version=resource['version'])
 
         if not restore:
             # load and process
             train_data, valid_data, test_data, self.vocab = self._load_data()
             logger.info('[Finish data load]')
-            self.train_data, self.valid_data, self.test_data, self.side_data = self._data_preprocess(train_data,
-                                                                                                     valid_data,
-                                                                                                     test_data)
+            self.train_data, self.valid_data, self.test_data, self.side_data = self._data_preprocess(train_data,valid_data,test_data)
             embedding = opt.get('embedding', None)
             if embedding:
                 self.side_data["embedding"] = np.load(os.path.join(self.dpath, embedding))

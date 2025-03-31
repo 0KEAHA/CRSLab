@@ -23,13 +23,16 @@ Attributes:
 from crslab.data.dataloader import *
 from crslab.data.dataset import *
 
+DEBUG = True
+
 dataset_register_table = {
     'ReDial': ReDialDataset,
     'TGReDial': TGReDialDataset,
     'GoRecDial': GoRecDialDataset,
     'OpenDialKG': OpenDialKGDataset,
     'Inspired': InspiredDataset,
-    'DuRecDial': DuRecDialDataset
+    'DuRecDial': DuRecDialDataset,
+    'Huatuo': HuatuoDataset
 }
 
 dataset_language_map = {
@@ -38,7 +41,8 @@ dataset_language_map = {
     'GoRecDial': 'en',
     'OpenDialKG': 'en',
     'Inspired': 'en',
-    'DuRecDial': 'zh'
+    'DuRecDial': 'zh',
+    'Huatuo': 'zh',
 }
 
 dataloader_register_table = {
@@ -103,6 +107,7 @@ def get_dataloader(opt, dataset, vocab) -> BaseDataLoader:
 
     """
     model_name = opt['model_name']
+    
     if model_name in dataloader_register_table:
         return dataloader_register_table[model_name](opt, dataset, vocab)
     else:

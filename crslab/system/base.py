@@ -13,6 +13,7 @@
 # @Email  : oran_official@outlook.com
 
 import os
+import sys
 from abc import ABC, abstractmethod
 import numpy as np
 import random
@@ -37,6 +38,7 @@ optim_class.update({'AdamW': AdamW, 'Adafactor': Adafactor})
 lr_scheduler_class = {k: v for k, v in lr_scheduler.__dict__.items() if not k.startswith('__') and k[0].isupper()}
 transformers_tokenizer = ('bert', 'gpt2')
 
+DEBUG = True
 
 class BaseSystem(ABC):
     """Base class for all system"""
@@ -85,6 +87,7 @@ class BaseSystem(ABC):
             self.test_dataloader = test_dataloader
         self.vocab = vocab
         self.side_data = side_data
+
         # model
         if 'model' in opt:
             self.model = get_model(opt, opt['model'], self.device, vocab, side_data).to(self.device)

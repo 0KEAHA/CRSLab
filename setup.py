@@ -9,12 +9,14 @@ except Exception:
 
 setup_requires = []
 
+'''fasttext~=0.9.2'''
+
 install_requires = [
     'numpy~=1.19.4',
     'sentencepiece<0.1.92',
     "dataclasses~=0.7;python_version<'3.7'",
     'transformers~=4.1.1',
-    'fasttext~=0.9.2',
+    
     'pkuseg~=0.0.25',
     'pyyaml~=5.4',
     'tqdm~=4.55.0',
