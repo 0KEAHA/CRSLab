@@ -4,8 +4,12 @@ from tqdm import tqdm
 
 from resources import resources
 from crslab.config import DATASET_PATH
+from transformers import AutoConfig, AutoTokenizer, AutoModelForCausalLM
 
-def _tokenize(tokenize ,str):
+
+model_path = "H:\ThesisCode\model\qwen"
+
+def _tokenize(tokenize ,string):
     """
     Tokenize the data using the provided tokenizer.
     :param data: The string to tokenize.
@@ -14,8 +18,21 @@ def _tokenize(tokenize ,str):
     if tokenize == 'pkuseg':
         import pkuseg
         seg = pkuseg.pkuseg()
-        tokenized_data = seg.cut(str)
+        tokenized_data = seg.cut(string)
         return tokenized_data
+    elif tokenize == 'qwen':
+        config = AutoConfig.from_pretrained(
+            model_path,
+            trust_remote_code=True
+        )
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_path,
+            trust_remote_code=True,
+            pad_token='<|endoftext|>',
+            config=config
+        )
+        tokens = tokenizer.encode(string, add_special_tokens=False)
+        return tokens
     
 def process_data(tokenize):
     """
@@ -46,4 +63,10 @@ def process_data(tokenize):
             json.dump(data, f, ensure_ascii=False, indent=4)
         print(f"{data_file } processed and saved to {out_path}.")
         
-process_data('pkuseg')
+#process_data('pkuseg')
+#print(_tokenize('qwen', '你好，我是一个AI助手。请问有什么可以帮助你的吗？'))
+config = AutoConfig.from_pretrained(
+            model_path,
+            trust_remote_code=True
+        )
+print(config)
