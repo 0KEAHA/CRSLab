@@ -5,9 +5,11 @@ not_download: true
 # dataloader
 context_truncate: 1024
 response_truncate: 1024
+max_seq_len: 1024
 scale: 1
 # model
-model: KBRD
+model: KBRD_Qwen
+model_path: H:\ThesisCode\model\qwen
 token_emb_dim: 300
 n_relation: 56
 kg_emb_dim: 128

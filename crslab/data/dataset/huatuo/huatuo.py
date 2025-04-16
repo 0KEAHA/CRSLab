@@ -18,7 +18,11 @@ DEBUG = True
 
 
 
+
 class HuatuoDataset(BaseDataset):
+    
+    #TODO: 增加context_str和response_str的处理
+    
     def __init__(self, opt, tokenize, restore=False, save=False):
         resource = resources[tokenize]
         self.special_token_idx = resource['special_token_idx']
@@ -126,16 +130,22 @@ class HuatuoDataset(BaseDataset):
     def _convert_to_id(self, conversation):
         augmented_convs = []
         context_tokens = []
+        context_str = []
         context_items = []
         for conv in conversation['conv']:
             assert conv['role'].lower() in ['seeker', 'recommender']
             text_token_ids = [self.tok2ind.get(word, self.unk_token_idx) for word in conv["text"]]
+            raw_text = ""
+            for word in conv["text"]:
+                raw_text += word
             entity_ids = [self.entity2id[entity] for entity in conv["entity"]]
             augmented_convs.append({
                 'role': conv['role'].lower().capitalize(),
                 'user_profile': None,
                 'context_tokens': copy(context_tokens),
+                'context_str': copy(context_str),
                 'response': copy(text_token_ids),
+                'response_str': copy(raw_text),
                 'interaction_history': None,
                 'context_items': copy(context_items),
                 'items': copy(entity_ids),
@@ -147,16 +157,17 @@ class HuatuoDataset(BaseDataset):
             })
             context_tokens.append(text_token_ids)
             context_items.extend(entity_ids)
+            context_str.append(raw_text)
         return augmented_convs
     
     def _process_side_data(self):
         processed_entity_kg = self._entity_kg_process()
-        logger.info(f"[Finish entity KG process], [The size of entity kg is {len(processed_entity_kg)}]")
+        logger.info(f"[Finish entity KG process], [The size of entity kg is {len(processed_entity_kg['entity'])}]")
         
         side_data = {
             "entity_kg": processed_entity_kg,
             "word_kg": None,
-            "item_entity_ids": None,
+            "item_entity_ids": list(self.entity2id.values()),
         }
         
         return side_data

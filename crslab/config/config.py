@@ -49,6 +49,7 @@ class Config:
             tokenize = ', '.join(tokenize.values())
         # model
         model = self.opt.get('model', None)
+        model_path = self.opt.get('model_path', None)
         rec_model = self.opt.get('rec_model', None)
         conv_model = self.opt.get('conv_model', None)
         policy_model = self.opt.get('policy_model', None)

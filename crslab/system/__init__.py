@@ -25,6 +25,7 @@ from .tgredial import TGReDialSystem
 system_register_table = {
     'ReDialRec_ReDialConv': ReDialSystem,
     'KBRD': KBRDSystem,
+    'KBRD_Qwen': KBRDSystem,
     'KGSF': KGSFSystem,
     'TGRec_TGConv': TGReDialSystem,
     'TGRec_TGConv_TGPolicy': TGReDialSystem,

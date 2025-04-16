@@ -89,9 +89,8 @@ class KBRDSystem(BaseSystem):
             rec_loss = rec_loss.sum()
             if mode == 'train':
                 self.backward(rec_loss)
-            # TODO: evaluate出现报错
-            # else:
-            #     self.rec_evaluate(rec_scores, batch['item'])
+            else:
+                self.rec_evaluate(rec_scores, batch['item'])
             rec_loss = rec_loss.item()
             if DEBUG:
                 logger.info(f'[Rec loss] {rec_loss}')

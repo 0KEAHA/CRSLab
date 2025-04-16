@@ -22,6 +22,7 @@ from .recommendation import *
 Model_register_table = {
     'KGSF': KGSFModel,
     'KBRD': KBRDModel,
+    'KBRD_Qwen': KBRDQwenModel,
     'TGRec': TGRecModel,
     'TGConv': TGConvModel,
     'TGPolicy': TGPolicyModel,

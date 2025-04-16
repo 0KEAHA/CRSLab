@@ -29,10 +29,8 @@ from crslab.model.base import BaseModel
 from crslab.model.utils.functions import edge_to_pyg_format
 from crslab.model.utils.modules.attention import SelfAttentionBatch
 from crslab.model.utils.modules.transformer import TransformerDecoder, TransformerEncoder
-from transformers import AutoConfig, AutoTokenizer, AutoModelForCausalLM
 
 
-USE_QWEN = False
 class KBRDModel(BaseModel):
     """
 
@@ -75,7 +73,13 @@ class KBRDModel(BaseModel):
         """
         self.device = device
         self.gpu = opt.get("gpu", [-1])
-
+        # vocab
+        self.pad_token_idx = vocab['pad']
+        self.start_token_idx = vocab['start']
+        self.end_token_idx = vocab['end']
+        self.vocab_size = vocab['vocab_size']
+        self.token_emb_dim = opt.get('token_emb_dim', 300)
+        self.pretrain_embedding = side_data.get('embedding', None)
         # kg
         self.n_entity = vocab['n_entity']
         entity_kg = side_data['entity_kg']
@@ -87,71 +91,26 @@ class KBRDModel(BaseModel):
         self.kg_emb_dim = opt.get('kg_emb_dim', 300)
         self.user_emb_dim = self.kg_emb_dim
         # transformer
-        
-        if not USE_QWEN:
-            # vocab
-            self.pretrain_embedding = side_data.get('embedding', None)
-            self.pad_token_idx = vocab['pad']
-            self.start_token_idx = vocab['start']
-            self.end_token_idx = vocab['end']
-            self.vocab_size = vocab['vocab_size']
-            self.token_emb_dim = opt.get('token_emb_dim', 300)
-        
-            # transformer
-            self.n_heads = opt.get('n_heads', 2)
-            self.n_layers = opt.get('n_layers', 2)
-            self.ffn_size = opt.get('ffn_size', 300)
-            self.dropout = opt.get('dropout', 0.1)
-            self.attention_dropout = opt.get('attention_dropout', 0.0)
-            self.relu_dropout = opt.get('relu_dropout', 0.1)
-            self.embeddings_scale = opt.get('embedding_scale', True)
-            self.learn_positional_embeddings = opt.get('learn_positional_embeddings', False)
-            self.reduction = opt.get('reduction', False)
-            self.n_positions = opt.get('n_positions', 1024)
-            self.longest_label = opt.get('longest_label', 1)
-            self.user_proj_dim = opt.get('user_proj_dim', 512)
-        else:
-            self.model_path = "H:\ThesisCode\model\qwen"
-            config = AutoConfig.from_pretrained(
-                self.model_path,
-                trust_remote_code=True
-            )
-            
-            # 从本地加载分词器
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                self.model_path,
-                trust_remote_code=True,
-                pad_token='<|endoftext|>',
-                config=config
-            )
-
-            # 从本地加载模型
-            self.qwen_model = AutoModelForCausalLM.from_pretrained(
-                self.model_path,
-                config=config,
-                trust_remote_code=True,
-                device_map="auto"  # 自动分配设备
-            ).to(self.device)
-
-            # 词表参数设置
-            self.vocab_size = self.tokenizer.vocab_size
-            self.pad_token_idx = self.tokenizer.pad_token_id
-            self.start_token_idx = self.tokenizer.bos_token_id or self.tokenizer.eos_token_id
-            self.end_token_idx = self.tokenizer.eos_token_id
-        
-        # switching network
-        
+        self.n_heads = opt.get('n_heads', 2)
+        self.n_layers = opt.get('n_layers', 2)
+        self.ffn_size = opt.get('ffn_size', 300)
+        self.dropout = opt.get('dropout', 0.1)
+        self.attention_dropout = opt.get('attention_dropout', 0.0)
+        self.relu_dropout = opt.get('relu_dropout', 0.1)
+        self.embeddings_scale = opt.get('embedding_scale', True)
+        self.learn_positional_embeddings = opt.get('learn_positional_embeddings', False)
+        self.reduction = opt.get('reduction', False)
+        self.n_positions = opt.get('n_positions', 1024)
+        self.longest_label = opt.get('longest_label', 1)
+        self.user_proj_dim = opt.get('user_proj_dim', 512)
 
         super(KBRDModel, self).__init__(opt, device)
 
     def build_model(self, *args, **kwargs):
+        self._build_embedding()
         self._build_kg_layer()
         self._build_recommendation_layer()
-        if not USE_QWEN:
-            self._build_conversation_layer()
-            self._build_embedding()
-        else:
-            self._build_qwen_layer()
+        self._build_conversation_layer()
 
     def _build_embedding(self):
         if self.pretrain_embedding is not None:
@@ -173,10 +132,6 @@ class KBRDModel(BaseModel):
         self.rec_bias = nn.Linear(self.kg_emb_dim, self.n_entity)
         self.rec_loss = nn.CrossEntropyLoss()
         logger.debug('[Build recommendation layer]')
-        
-    def _build_qwen_layer(self):
-        pass
-        
 
     def _build_conversation_layer(self):
         self.register_buffer('START', torch.tensor([self.start_token_idx], dtype=torch.long))
@@ -252,6 +207,7 @@ class KBRDModel(BaseModel):
         return sum_logits, preds
 
     def decode_greedy(self, encoder_states, user_embedding):
+
         bsz = encoder_states[0].shape[0]
         xs = self._starts(bsz)
         incr_state = None

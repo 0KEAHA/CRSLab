@@ -48,6 +48,7 @@ dataset_language_map = {
 dataloader_register_table = {
     'KGSF': KGSFDataLoader,
     'KBRD': KBRDDataLoader,
+    'KBRD_Qwen': KBRDQwenDataLoader,
     'TGReDial': TGReDialDataLoader,
     'TGRec': TGReDialDataLoader,
     'TGConv': TGReDialDataLoader,

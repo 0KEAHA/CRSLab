@@ -371,6 +371,9 @@ class BaseSystem(ABC):
             import pkuseg
             self.pkuseg_tokenizer = pkuseg.pkuseg()
         return self.pkuseg_tokenizer.cut(text)
+    
+    def qwen_tokenize(self, text):
+        raise NotImplementedError("Qwen tokenizer is not implemented yet.")
 
     def link(self, tokens, entities):
         linked_entities = []

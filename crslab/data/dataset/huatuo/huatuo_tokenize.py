@@ -55,7 +55,7 @@ def process_data(tokenize):
             exit(1)
         with open(source_data_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
-        for item in data:
+        for item in tqdm(data):
             for conv in item['conv']:
                 conv['text'] = _tokenize(tokenize, conv['text'])
         out_path = os.path.join(dpath, data_file)
@@ -63,10 +63,27 @@ def process_data(tokenize):
             json.dump(data, f, ensure_ascii=False, indent=4)
         print(f"{data_file } processed and saved to {out_path}.")
         
-#process_data('pkuseg')
+# process_data('pkuseg')
+
+
 #print(_tokenize('qwen', '你好，我是一个AI助手。请问有什么可以帮助你的吗？'))
+
 config = AutoConfig.from_pretrained(
             model_path,
             trust_remote_code=True
         )
+tokenizer = AutoTokenizer.from_pretrained(
+            model_path,
+            trust_remote_code=True,
+            config=config
+        )
+# source_str = "你好，我是一个AI助手。请问有什么可以帮助你的吗？"
+# print(tokenizer.encode(source_str, add_special_tokens=False))
+# tokenized_output = tokenizer(source_str,padding=True, truncation=True, return_tensors="pt")
+# print(tokenized_output['input_ids'])
+# print(tokenized_output['attention_mask'])
+# print(tokenizer.encode(tokenizer.eos_token))
 print(config)
+# print(tokenizer.pad_token_id)
+# print(tokenizer.eos_token_id)
+# print(tokenizer.bos_token_id)
