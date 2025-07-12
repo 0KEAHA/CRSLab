@@ -1,11 +1,4 @@
-# @Time   : 2020/11/22
-# @Author : Kun Zhou
-# @Email  : francis_kun_zhou@163.com
 
-# UPDATE:
-# @Time   : 2020/11/24, 2021/1/9
-# @Author : Kun Zhou, Xiaolei Wang
-# @Email  : francis_kun_zhou@163.com, wxl1999@foxmail.com
 
 import argparse
 import warnings
@@ -15,12 +8,16 @@ from loguru import logger
 
 DEBUG = True
 
-from crslab.config import Config
+from config import Config
 
 warnings.filterwarnings('ignore')
 
 os.environ["LOGURU_LEVEL"] = "DEBUG"
 logger.add(sys.stderr, level="DEBUG" if DEBUG else "INFO", format="{time} {level} {message}")
+
+from os.path import dirname, realpath
+
+
 
 if __name__ == '__main__':
     # parse args
@@ -46,7 +43,8 @@ if __name__ == '__main__':
     args, _ = parser.parse_known_args()
     config = Config(args.config, args.gpu, args.debug)
 
-    from crslab.quick_start import run_crslab
+    from quick_start import run_crslab
 
     run_crslab(config, args.save_data, args.restore_data, args.save_system, args.restore_system, args.interact,
                args.debug, args.tensorboard)
+
