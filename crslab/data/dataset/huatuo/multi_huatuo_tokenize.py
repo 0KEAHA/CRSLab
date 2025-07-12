@@ -7,36 +7,13 @@ import functools # 用于传递额外参数给 map
 from transformers import AutoConfig, AutoTokenizer, AutoModelForCausalLM
 
 
-# 假设 resources 和 DATASET_PATH 已经定义好
-# from resources import resources
-# from crslab.config import DATASET_PATH
-# Mock definitions for demonstration:
+
 resources = {
     'pkuseg': {'folder_path': 'dummy_dataset'}
 }
-DATASET_PATH = 'H:\ThesisCode\CRSLab\CRSLab\data\dataset\huatuo\qwen' # 当前目录作为示例
+DATASET_PATH = 'H:\ThesisCode\CRSLab\CRSLab\data\dataset\huatuo\qwen' 
 
-# # 确保示例目录存在
-# dummy_folder = os.path.join(DATASET_PATH, resources['pkuseg']['folder_path'])
-# os.makedirs(dummy_folder, exist_ok=True)
 
-# # --- 创建一些示例源数据文件 ---
-# def create_dummy_data(filename, num_items=100, num_convs=5):
-#     data = []
-#     for i in range(num_items):
-#         item = {'id': i, 'conv': []}
-#         for j in range(num_convs):
-#             item['conv'].append({'text': f"这是第{i}项第{j}条对话的示例文本。"})
-#         data.append(item)
-#     source_path = os.path.join(dummy_folder, "source_" + filename)
-#     with open(source_path, 'w', encoding='utf-8') as f:
-#         json.dump(data, f, ensure_ascii=False, indent=4)
-#     print(f"创建了示例文件: {source_path}")
-
-# create_dummy_data('train_data.json', 500) # 增加数据量以体现并行效果
-# create_dummy_data('valid_data.json', 100)
-# create_dummy_data('test_data.json', 100)
-# # --- 示例数据创建结束 ---
 
 model_path = "H:\ThesisCode\model\qwen"
 
@@ -50,9 +27,7 @@ def _tokenize(tokenize_method ,string):
     :param string: The string to tokenize.
     :return: The tokenized data (list of words).
     """
-    # 注意：pkuseg 会在每个被调用的进程中加载和初始化。
-    # 对于 pkuseg 这种轻量级库，通常问题不大。
-    # 如果是大型模型或初始化开销大的库，考虑使用 Pool(initializer=...)
+   
     if tokenize_method == 'pkuseg':
         # 动态导入，确保每个进程都能找到
         try:
@@ -183,16 +158,9 @@ def process_data_parallel(tokenize_method, num_workers=None):
         except Exception as e:
             print(f"错误：写入 JSON 文件失败 {out_path}: {e}")
 
-# --- 运行原始版本进行对比 (可选) ---
-# print("="*20 + " 运行原始串行版本 " + "="*20)
-# start_serial = time.time()
-# process_data('pkuseg') # 调用原始函数
-# end_serial = time.time()
-# print(f"\n原始串行版本总耗时: {end_serial - start_serial:.2f} 秒")
-# print("="*50)
 
-# --- 运行并行版本 ---
-# 使用 if __name__ == '__main__': 是 multiprocessing 的最佳实践，尤其在 Windows 上
+
+
 if __name__ == '__main__':
     # # 清理之前可能生成的输出文件，以便比较
     # for f_name in ['train_data.json', 'valid_data.json', 'test_data.json']:

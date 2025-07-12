@@ -21,8 +21,6 @@ DEBUG = True
 
 class HuatuoDataset(BaseDataset):
     
-    #TODO: 增加context_str和response_str的处理
-    
     def __init__(self, opt, tokenize, restore=False, save=False):
         resource = resources[tokenize]
         self.special_token_idx = resource['special_token_idx']
@@ -31,13 +29,17 @@ class HuatuoDataset(BaseDataset):
         dpath = os.path.join(DATASET_PATH, resource['folder_path'], tokenize)
         self.replace_token = opt.get('replace_token',None)
         self.replace_token_idx = opt.get('replace_token_idx',None)
+        self.opt = opt
         super().__init__(opt, dpath, resource, restore, save)
     
 
         
     def _load_data(self):
         train_data, valid_data, test_data = self._load_raw_data()
-        self._load_vocab()
+        if self.opt.get('tokenize',None) == 'qwen':
+            self._load_qwen_vocab()
+        else:
+            self._load_vocab()
         self._load_other_data()
 
         vocab = {
@@ -74,6 +76,18 @@ class HuatuoDataset(BaseDataset):
             logger.info(f'[Load test data from {os.path.join(self.dpath, "test_data.json")}]')
         return train_data, valid_data, test_data
     
+    def _load_qwen_vocab(self):
+        self.token2id = json.load(open(os.path.join(self.opt.get('model_path',None), 'vocab.json'), 'r', encoding='utf-8'))
+        with open(os.path.join(self.opt.get('model_path',None), 'tokenizer_config.json'), 'r', encoding='utf-8') as f:
+            tokenizer_config = json.load(f)
+        added_tokens = tokenizer_config.get('added_tokens_decoder', [])
+        for idx,token in added_tokens.items():
+            self.token2id[token['content']] = idx
+        self.id2token = {idx: word for word, idx in self.token2id.items()}
+        logger.info(f"[Load vocab from {os.path.join(self.opt.get('model_path',None), 'vocab.json')}]")
+        logger.info(f"[The size of token2index dictionary is {len(self.token2id)}]")
+        logger.info(f"[The size of index2token dictionary is {len(self.id2token)}]")
+    
     def _load_vocab(self):
         self.tok2ind = json.load(open(os.path.join(self.dpath, 'token2id.json'), 'r', encoding='utf-8'))
         self.ind2tok = {idx: word for word, idx in self.tok2ind.items()}
@@ -94,8 +108,9 @@ class HuatuoDataset(BaseDataset):
 
         
     def _load_other_data(self):
+        entity_file = self.opt.get('entity_file',None)
         self.entity2id = json.load(
-            open(os.path.join(self.dpath, 'entity2id.json'), encoding='utf-8'))  # {entity: entity_id}
+            open(os.path.join(self.dpath, entity_file), encoding='utf-8'))  # {entity: entity_id}
         entityid2order = dict(enumerate(self.entity2id.values()))
         entityid2order = {entity_id: entity for entity, entity_id in entityid2order.items()}
         self.entity2id = {entity: entityid2order[entity_id] for entity, entity_id in self.entity2id.items()}
@@ -105,7 +120,8 @@ class HuatuoDataset(BaseDataset):
         self._load_entity_kg()
         
     def _load_entity_kg(self):
-        self.entity_kg = pd.read_csv(os.path.join(self.dpath, 'kg_simplified.csv'), header=0, encoding='utf-8')
+        kg_file = self.opt.get('kg_file',None)
+        self.entity_kg = pd.read_csv(os.path.join(self.dpath, kg_file), header=0, encoding='utf-8')
 
         
     def _data_preprocess(self,train_data, valid_data, test_data):
@@ -132,6 +148,7 @@ class HuatuoDataset(BaseDataset):
         context_tokens = []
         context_str = []
         context_items = []
+        context_role_list = []
         for conv in conversation['conv']:
             assert conv['role'].lower() in ['seeker', 'recommender']
             text_token_ids = [self.tok2ind.get(word, self.unk_token_idx) for word in conv["text"]]
@@ -141,6 +158,7 @@ class HuatuoDataset(BaseDataset):
             entity_ids = [self.entity2id[entity] for entity in conv["entity"]]
             augmented_convs.append({
                 'role': conv['role'].lower().capitalize(),
+                'context_role_list': copy(context_role_list),
                 'user_profile': None,
                 'context_tokens': copy(context_tokens),
                 'context_str': copy(context_str),
@@ -158,6 +176,7 @@ class HuatuoDataset(BaseDataset):
             context_tokens.append(text_token_ids)
             context_items.extend(entity_ids)
             context_str.append(raw_text)
+            context_role_list.append(conv['role'].lower().capitalize())
         return augmented_convs
     
     def _process_side_data(self):

@@ -17,6 +17,7 @@ from loguru import logger
 
 from .inspired import InspiredSystem
 from .kbrd import KBRDSystem
+from .kbrd_qwen import KBRDQwenSystem
 from .kgsf import KGSFSystem
 from .redial import ReDialSystem
 from .ntrd import NTRDSystem
@@ -25,7 +26,7 @@ from .tgredial import TGReDialSystem
 system_register_table = {
     'ReDialRec_ReDialConv': ReDialSystem,
     'KBRD': KBRDSystem,
-    'KBRD_Qwen': KBRDSystem,
+    'KBRD_Qwen': KBRDQwenSystem,
     'KGSF': KGSFSystem,
     'TGRec_TGConv': TGReDialSystem,
     'TGRec_TGConv_TGPolicy': TGReDialSystem,

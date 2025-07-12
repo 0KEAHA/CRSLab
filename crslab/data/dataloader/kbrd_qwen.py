@@ -104,9 +104,10 @@ class KBRDQwenDataLoader(BaseDataLoader):
     def conv_batchify(self, batch):
         batch_full_texts = []
         batch_context_entities = []
-        
+        batch_response_str = []
         
         for conv_dict in batch:
+            batch_response_str.append(conv_dict['response_str'])
             context = "\n".join(conv_dict['context_str'])
             full_text = context + "\n" + conv_dict['response_str']
             batch_full_texts.append(full_text)
@@ -134,7 +135,8 @@ class KBRDQwenDataLoader(BaseDataLoader):
             "context_entities": batch_context_entities,
             "input_ids": input_ids,
             "attention_mask": attention_mask,
-            "labels": labels
+            "labels": labels,
+            "response_str":batch_response_str
         }
 
     def policy_batchify(self, *args, **kwargs):

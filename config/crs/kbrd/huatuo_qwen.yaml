@@ -2,6 +2,8 @@
 dataset: Huatuo
 tokenize: qwen
 not_download: true
+entity_file: entity2id_normalized_continuous.json
+kg_file: kg_simplified_Coincide_normalized_continuous.csv
 # dataloader
 context_truncate: 1024
 response_truncate: 1024

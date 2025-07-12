@@ -9,13 +9,14 @@
 
 import re
 from collections import Counter
-
+import jieba
 import math
 import numpy as np
 from nltk import ngrams
 from nltk.translate.bleu_score import sentence_bleu
 from sklearn.metrics.pairwise import cosine_similarity
 from typing import List, Optional
+from loguru import logger
 
 from crslab.evaluator.metrics.base import AverageMetric, SumMetric
 
@@ -95,15 +96,31 @@ class BleuMetric(AverageMetric):
         """
         Compute approximate BLEU score between guess and a set of answers.
         """
-
+        tokenized_guess = jieba.lcut(guess)
+        tokenized_answers = [jieba.lcut(a) for a in answers]
+        if not tokenized_guess or not any(tokenized_answers):
+            return BleuMetric(0.0)
         weights = [0] * 4
+        if k < 1 or k > 4:
+            logger.info(f"Warning: Invalid k={k} for BleuMetric. Using k=4.")
+            k = 4
         weights[k - 1] = 1
-        score = sentence_bleu(
-            [a.split(" ") for a in answers],
-            guess.split(" "),
-            weights=weights,
-        )
+        try:
+            # 使用分词后的结果计算 BLEU
+            score = sentence_bleu(
+                tokenized_answers,
+                tokenized_guess,
+                weights=weights,
+            )
+        except ZeroDivisionError:
+            # 如果 guess 过短 (例如少于 k 个词)，n-gram 分母可能为0
+            score = 0.0
+        except Exception as e:
+            # 捕获其他潜在错误
+            logger.error(f"Error calculating BLEU score: {e}")
+            score = 0.0
         return BleuMetric(score)
+        
 
 
 class DistMetric(SumMetric):

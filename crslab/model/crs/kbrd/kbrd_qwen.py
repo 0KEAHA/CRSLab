@@ -176,12 +176,7 @@ class KBRDQwenModel(BaseModel):
         ).to(self.device)
 
         # 词表参数设置
-        if DEBUG:
-            vocab_file = r"H:\ThesisCode\CRSLab\CRSLab\data\dataset\huatuo\qwen\token2id.json"
-            with open(vocab_file, 'r', encoding='utf-8') as f:
-                token2id = json.load(f)
-            self.tok2ind = token2id
-            self.ind2tok = {idx: word for word, idx in token2id.items()}
+
             
         self.vocab_size = self.tokenizer.vocab_size
         self.pad_token_idx = self.tokenizer.pad_token_id if not self.tokenizer.pad_token_id == None else self.tokenizer.eos_token_id
@@ -239,12 +234,18 @@ class KBRDQwenModel(BaseModel):
             return_dict = True
         )
         token_logits = outputs.logits
+        token_logits = token_logits[:, :, :self.vocab_size]
         user_logits = self.user_proj_2(F.relu(self.user_proj_1(user_embedding.to(self.device)))).unsqueeze(1)
         sum_logits = token_logits + user_logits
-        loss = self.conv_loss(sum_logits.view(-1, self.vocab_size), labels.view(-1).to(self.device))
+        loss = outputs.loss
         preds = torch.argmax(sum_logits, dim=-1)
         return loss,preds
         
+    def decode_preds(self,preds):
+        pred_text = self.tokenizer.batch_decode(preds, skip_special_tokens=True)
+        pred_text = [text.replace(self.tokenizer.eos_token, '') for text in pred_text]
+        pred_text = [text.replace(self.tokenizer.pad_token, '') for text in pred_text]
+        return pred_text
     
     def converse(self, batch, mode):
         input_ids = batch['input_ids'].to(self.device)
@@ -262,7 +263,7 @@ class KBRDQwenModel(BaseModel):
             logits_processor_list = LogitsProcessorList([bias_processor])
             self.qwen_model.eval()
             with torch.no_grad():
-                generated_ids = self.qwen_decoder.generate(
+                generated_ids = self.qwen_model.generate(
                     input_ids=input_ids,
                     attention_mask=attention_mask,
                     logits_processor=logits_processor_list, 
