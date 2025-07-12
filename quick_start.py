@@ -3,6 +3,10 @@
 from config import Config
 from data import get_dataset, get_dataloader
 from system import get_system
+from pretrained_model import PretrainedModelForKBRDQwen
+import sys
+
+DEBUG = True
 
 
 def run_crslab(config, save_data=False, restore_data=False, save_system=False, restore_system=False,
@@ -20,20 +24,22 @@ def run_crslab(config, save_data=False, restore_data=False, save_system=False, r
         interact (bool): whether to interact with the system. Defaults to False.
         debug (bool): whether to debug the system. Defaults to False.
 
-
-
+    
     """
     # dataset & dataloader
     if isinstance(config['tokenize'], str):
+        
+        PretrainedModel = PretrainedModelForKBRDQwen(config)
+        
         CRS_dataset = get_dataset(config, config['tokenize'], restore_data, save_data)
         side_data = CRS_dataset.side_data
         vocab = CRS_dataset.vocab
 
-        train_dataloader = get_dataloader(config, CRS_dataset.train_data, vocab)
-        valid_dataloader = get_dataloader(config, CRS_dataset.valid_data, vocab)
-        test_dataloader = get_dataloader(config, CRS_dataset.test_data, vocab)
+        train_dataloader = get_dataloader(config, CRS_dataset.train_data, vocab, side_data,PretrainedModel)
+        valid_dataloader = get_dataloader(config, CRS_dataset.valid_data, vocab,side_data,PretrainedModel)
+        test_dataloader = get_dataloader(config, CRS_dataset.test_data, vocab,side_data,PretrainedModel)
     # system
-    CRS = get_system(config, train_dataloader, valid_dataloader, test_dataloader, vocab, side_data, restore_system,
+    CRS = get_system(PretrainedModel, config, train_dataloader, valid_dataloader, test_dataloader, vocab, side_data,  restore_system,
                      interact, debug, tensorboard)
     if interact:
         CRS.interact()

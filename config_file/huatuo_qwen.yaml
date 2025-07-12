@@ -5,10 +5,10 @@ not_download: true
 entity_file: entity2id_normalized_continuous.json
 kg_file: kg_simplified_Coincide_normalized_continuous.csv
 # dataloader
-context_truncate: 1024
-response_truncate: 1024
+context_truncate: 2048
+response_truncate: 2048
 use_chatML: true
-max_seq_len: 512
+max_seq_len: 2048
 scale: 1
 # model
 model: KBRD_Qwen
@@ -37,14 +37,14 @@ rec:
     name: AdamW
     lr: !!float 1e-3
 conv:
-  epoch: 10
-  batch_size: 2
+  epoch: 50
+  batch_size: 1
   early_stop: True
   stop_mode: min
   optimizer:
     name: AdamW
-    lr: !!float 1e-6
+    lr: !!float 2e-6
   lr_scheduler:
     name: ReduceLROnPlateau
-    patience: 3
+    patience: 5
     factor: 0.5

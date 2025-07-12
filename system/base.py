@@ -1,6 +1,7 @@
 
 
 import os
+import sys
 from abc import ABC, abstractmethod
 import numpy as np
 import random
@@ -10,7 +11,8 @@ from fuzzywuzzy.process import extractOne
 from loguru import logger
 from nltk import word_tokenize
 from torch import optim
-from transformers import AdamW, Adafactor
+from transformers import  Adafactor
+from torch.optim import AdamW
 
 from config import SAVE_PATH
 from evaluator import get_evaluator
@@ -25,11 +27,12 @@ optim_class.update({'AdamW': AdamW, 'Adafactor': Adafactor})
 lr_scheduler_class = {k: v for k, v in lr_scheduler.__dict__.items() if not k.startswith('__') and k[0].isupper()}
 transformers_tokenizer = ('bert', 'gpt2')
 
+DEBUG = True
 
 class BaseSystem(ABC):
     """Base class for all system"""
 
-    def __init__(self, opt, train_dataloader, valid_dataloader, test_dataloader, vocab, side_data, restore_system=False,
+    def __init__(self, PretrainModel, opt, train_dataloader, valid_dataloader, test_dataloader, vocab, side_data, restore_system=False,
                  interact=False, debug=False, tensorboard=False):
         """
 
@@ -73,9 +76,10 @@ class BaseSystem(ABC):
             self.test_dataloader = test_dataloader
         self.vocab = vocab
         self.side_data = side_data
+
         # model
         if 'model' in opt:
-            self.model = get_model(opt, opt['model'], self.device, vocab, side_data).to(self.device)
+            self.model = get_model(PretrainModel, opt, opt['model'], self.device, vocab, side_data).to(self.device)
         else:
             if 'rec_model' in opt:
                 self.rec_model = get_model(opt, opt['rec_model'], self.device, vocab['rec'], side_data['rec']).to(
@@ -92,7 +96,7 @@ class BaseSystem(ABC):
             self.restore_model()
 
         if not interact:
-            self.evaluator = get_evaluator(opt.get('evaluator', 'standard'), opt['dataset'], tensorboard)
+            self.evaluator = get_evaluator(PretrainModel,opt.get('evaluator', 'standard'), opt['dataset'], self.opt, tensorboard)
 
     def init_optim(self, opt, parameters):
         self.optim_opt = opt
@@ -356,6 +360,9 @@ class BaseSystem(ABC):
             import pkuseg
             self.pkuseg_tokenizer = pkuseg.pkuseg()
         return self.pkuseg_tokenizer.cut(text)
+    
+    def qwen_tokenize(self, text):
+        raise NotImplementedError("Qwen tokenizer is not implemented yet.")
 
     def link(self, tokens, entities):
         linked_entities = []

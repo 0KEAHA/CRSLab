@@ -12,5 +12,5 @@
 
 （3）基于Qwen预训练模型，使用知识图谱计算词偏置与指令微调，用于向患者进行主动问询了解详细病情，在Huatuo26M-Lite转化数据集上进行对比和消融实验，结果显著优于基线和变体模型，表明了外部知识与指令微调在实际业务场景中的输出对齐作用。
 
-部分代码框架基于CRSLAB【Zhou K, Wang X, Zhou Y, et al. CRSLab: An Open-Source Toolkit for Building Conversational Recommender System[J]. *arXiv e-prints,* 2021: arXiv: 2101. 00939.】，并对主要模块进行了重构
+部分代码框架基于CRSLAB，并对主要模块进行了重构。
 

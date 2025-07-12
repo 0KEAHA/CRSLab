@@ -3,17 +3,17 @@
 import torch
 from loguru import logger
 
-from model.kbrd import KBRDModel
+from model.kbrd_qwen import KBRDQwenModel
 
 Model_register_table = {
-    'KBRD': KBRDModel
+    'KBRD_Qwen': KBRDQwenModel
 
 }
 
 
-def get_model(config, model_name, device, vocab, side_data=None):
+def get_model(PretrainModel, config, model_name, device, vocab,side_data=None):
     if model_name in Model_register_table:
-        model = Model_register_table[model_name](config, device, vocab, side_data)
+        model = Model_register_table[model_name](PretrainModel, config, device, vocab, side_data)
         logger.info(f'[Build model {model_name}]')
         if config.opt["gpu"] == [-1]:
             return model
@@ -29,3 +29,4 @@ def get_model(config, model_name, device, vocab, side_data=None):
 
     else:
         raise NotImplementedError('Model [{}] has not been implemented'.format(model_name))
+

@@ -1,5 +1,4 @@
 
-
 import functools
 from abc import ABC, abstractmethod
 

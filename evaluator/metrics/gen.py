@@ -5,6 +5,9 @@ from collections import Counter
 
 import math
 import numpy as np
+import jieba
+from loguru import logger
+import sys
 from nltk import ngrams
 from nltk.translate.bleu_score import sentence_bleu
 from sklearn.metrics.pairwise import cosine_similarity
@@ -71,12 +74,11 @@ class F1Metric(AverageMetric):
         return f1
 
     @staticmethod
-    def compute(guess: str, answers: List[str]) -> 'F1Metric':
+    def compute(guess: List[str], answers: List[List[str]]) -> 'F1Metric':
         if guess is None or answers is None:
             return AverageMetric(0, 0)
-        g_tokens = guess.split()
         scores = [
-            F1Metric._prec_recall_f1_score(g_tokens, a.split())
+            F1Metric._prec_recall_f1_score(guess, a)
             for a in answers
         ]
         return F1Metric(max(scores), 1)
@@ -84,26 +86,40 @@ class F1Metric(AverageMetric):
 
 class BleuMetric(AverageMetric):
     @staticmethod
-    def compute(guess: str, answers: List[str], k: int) -> Optional['BleuMetric']:
+    def compute(guess: List[str], answers: List[List[str]], k: int) -> Optional['BleuMetric']:
         """
         Compute approximate BLEU score between guess and a set of answers.
         """
-
+        tokenized_guess = guess
+        tokenized_answers = answers
+        if not tokenized_guess or not any(tokenized_answers):
+            return BleuMetric(0.0)
         weights = [0] * 4
+        if k < 1 or k > 4:
+            logger.info(f"Warning: Invalid k={k} for BleuMetric. Using k=4.")
+            k = 4
         weights[k - 1] = 1
-        score = sentence_bleu(
-            [a.split(" ") for a in answers],
-            guess.split(" "),
-            weights=weights,
-        )
+        try:
+            # 使用分词后的结果计算 BLEU
+            score = sentence_bleu(
+                tokenized_answers,
+                tokenized_guess,
+                weights=weights,
+            )
+        except ZeroDivisionError:
+            # 如果 guess 过短 (例如少于 k 个词)，n-gram 分母可能为0
+            score = 0.0
+        except Exception as e:
+            # 捕获其他潜在错误
+            logger.error(f"Error calculating BLEU score: {e}")
+            score = 0.0
         return BleuMetric(score)
-
 
 class DistMetric(SumMetric):
     @staticmethod
-    def compute(sent: str, k: int) -> 'DistMetric':
+    def compute(sent: List[str], k: int) -> 'DistMetric':
         token_set = set()
-        for token in ngrams(sent.split(), k):
+        for token in ngrams(sent, k):
             token_set.add(token)
         return DistMetric(len(token_set))
 

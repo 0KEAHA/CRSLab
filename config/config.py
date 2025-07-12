@@ -9,8 +9,8 @@ import yaml
 import torch
 from loguru import logger
 from tqdm import tqdm
-from os.path import dirname, realpath
 
+DEBUG = True
 
 class Config:
     """Configurator module that load the defined parameters."""
@@ -23,7 +23,7 @@ class Config:
                 You can use default config provided in the `Github repo`_, or write it by yourself.
             debug (bool, optional): whether to enable debug function during running. Defaults to False.
 
-  
+
 
         """
 
@@ -46,6 +46,8 @@ class Config:
         conv_model = self.opt.get('conv_model', None)
         policy_model = self.opt.get('policy_model', None)
         self.not_download = self.opt.get('not_download', False)
+        if DEBUG:
+            print(f'Config: it is not_download: {self.not_download}')
         if model:
             model_name = model
         else:
